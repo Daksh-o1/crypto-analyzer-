@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Project Phase](https://img.shields.io/badge/phase-0%20Foundation%20COMPLETE-brightgreen.svg)](phases.md)
+[![Project Phase](https://img.shields.io/badge/phase-2%20Data%20Pipeline%20COMPLETE-brightgreen.svg)](phases.md)
 
 ## 1. Project Title & Overview
 
@@ -33,7 +33,7 @@ This project addresses these gaps by establishing a reproducible scientific benc
 
 ## 4. Key Research Objectives
 
-1. **Short-Term Target Formulation:** Evaluate future 5-minute directional classification (UP/DOWN sign of return) alongside percentage return regression.
+1. **Short-Term Target Formulation:** Evaluate future 1-hour directional classification (UP/DOWN sign of return $D(t, 12)$) alongside percentage return regression ($R(t, 12)$) over a 5-hour lookback context ($W=60$).
 2. **Feature Ablation Study:** Methodically quantify the predictive value added by:
    - Price alone vs. Price + Volume
    - Price + Volume + Technical Indicators (SMA, EMA, RSI, MACD, Bollinger Bands, ATR)
@@ -69,7 +69,7 @@ D:\CryptoAnalyzer
 │
 ├── src/                      # Core modular Python library
 │   └── crypto_analyzer/
-│       ├── data/             # Downloader & raw data handling
+│       ├── data/             # Downloader, validator, & raw data metadata
 │       ├── features/         # Feature engineering & technical indicators
 │       ├── preprocessing/    # Chronological splitters & scalers
 │       ├── models/           # Baselines & Deep Learning architectures
@@ -82,7 +82,7 @@ D:\CryptoAnalyzer
 ├── tests/                    # Unit, integration, & leakage test suite
 │
 ├── data/                     # Local data storage (D: Drive only)
-│   ├── raw/
+│   ├── raw/                  # Immutable raw BTC/USDT OHLCV datasets
 │   ├── processed/
 │   └── external/
 │
@@ -140,6 +140,10 @@ D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/
 ## 8. Current Project Status
 
 - **Phase 0 (Project Foundation):** **COMPLETE**
-- **Phase 1 (Research Foundation):** NOT_STARTED (Awaiting Human Approval)
+- **Phase 1 (Research Foundation):** **COMPLETE**
+- **Phase 2 (Data Pipeline):** **COMPLETE**
+- **Phase 3 (Feature Engineering):** NOT_STARTED (Awaiting Human Approval)
+
+Refer to [phases.md](phases.md) for full phase status breakdown and [UPDATE.md](UPDATE.md) for full execution log.
 
 Refer to [phases.md](phases.md) for full phase status breakdown and [UPDATE.md](UPDATE.md) for full execution log.

@@ -12,8 +12,8 @@ Strict Workflow:
 | Phase | Title | Objective | Status |
 |---|---|---|---|
 | Phase 0 | Project Foundation | Establish environment, structure, git, docs, and test harness on D: | **COMPLETE** |
-| Phase 1 | Research Foundation | Finalize formal scientific definitions, hypotheses, and experimental design | NOT_STARTED |
-| Phase 2 | Data Pipeline | Build reproducible BTC/USDT data acquisition, validation, and storage | NOT_STARTED |
+| Phase 1 | Research Foundation | Finalize formal scientific definitions, hypotheses, and experimental design | **COMPLETE** |
+| Phase 2 | Data Pipeline | Build reproducible BTC/USDT data acquisition, validation, and storage | **COMPLETE** |
 | Phase 3 | Feature Engineering | Compute return, volume, indicator, and volatility features without leakage | NOT_STARTED |
 | Phase 4 | Target & Sequence Pipeline | Create 3D sequence tensors, targets, chronologically split, fit train scalers | NOT_STARTED |
 | Phase 5 | Baseline Models | Implement Naive, Linear, Random Forest, and XGBoost baselines | NOT_STARTED |
@@ -56,30 +56,45 @@ Strict Workflow:
 
 ## Phase 1: Research Foundation
 
-- **Objective:** Finalize the scientific definition of the project, including formal mathematical targets, feature categories, model taxonomy, evaluation metrics, and threats to validity.
+- **Objective:** Finalize the scientific definition of the project, including formal scale-stable targets, feature categories, model taxonomy, evaluation metrics, and threats to validity.
 - **Tasks:**
   - Formulate precise research questions and hypotheses H1-H4.
-  - Define formal mathematical definitions for 5-minute directional classification and percentage return regression.
+  - Define formal mathematical definitions for 1-hour forecast horizon ($H = 12$ candles = 60 minutes) percentage return regression $R(t, 12)$ and binary directional classification $D(t, 12)$ using 5-minute candles over a 5-hour lookback window ($W = 60$ candles).
   - Detail experimental feature sets (Price-only, Price+Volume, Technical Indicators, Volatility).
-  - Document market regime classification methodology.
+  - Document market regime classification methodology ($W_{\text{regime}}=288$ candles).
   - Specify threats to validity and reproducibility criteria.
-- **Deliverables:** Complete `RESEARCH.md` and `docs/methodology.md`.
-- **Validation Command:** `python -m pytest tests/test_research_spec.py`
-- **Status:** NOT_STARTED
+  - Document relationship to reference repository `khuangaf/CryptocurrencyPrediction`.
+- **Deliverables:** Complete `RESEARCH.md`, `DECISIONS.md`, `docs/methodology.md`, `docs/experiments.md`, `docs/reproducibility.md`, and `tests/test_research_spec.py`.
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_research_spec.py`
+- **Status:** **COMPLETE**
 
 ---
 
 ## Phase 2: Data Pipeline
 
-- **Objective:** Build reproducible BTC/USDT data acquisition, validation, and raw data persistence.
+- **Objective:** Build reproducible BTC/USDT data acquisition, validation, raw data persistence, and integrity metadata logging.
 - **Tasks:**
   - Implement Binance historical 5-minute candle data downloader module.
   - Store immutable raw datasets in `data/raw/`.
-  - Build data validator (timestamp gaps, duplicate candles, OHLC logic check, zero/negative volume check).
-  - Output dataset metadata summary.
+  - Build comprehensive data validator enforcing strict integrity checks:
+    - Strictly increasing timestamps
+    - Expected 5-minute intervals (300,000 ms)
+    - UTC timezone normalization
+    - Duplicate timestamp detection & resolution
+    - Missing candle identification & gap reporting
+    - OHLC logic consistency ($\text{High} \ge \max(\text{Open}, \text{Close})$, $\text{Low} \le \min(\text{Open}, \text{Close})$)
+    - Positive OHLC values ($\text{Open}, \text{High}, \text{Low}, \text{Close} > 0$)
+    - Non-negative volume ($\text{Volume} \ge 0$)
+    - NaN / Inf value detection
+    - Schema type validation
+    - Date coverage & time span verification
+    - Total row count validation
+    - Dataset provenance tracking (exchange source, endpoint, timestamp acquired)
+    - File hash / checksum verification (SHA-256)
+  - Output dataset metadata summary report.
 - **Deliverables:** `src/crypto_analyzer/data/`, `scripts/download_data.py`.
-- **Validation Command:** `python -m pytest tests/test_data_pipeline.py`
-- **Status:** NOT_STARTED
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_data_pipeline.py`
+- **Status:** **COMPLETE**
 
 ---
 
@@ -92,7 +107,7 @@ Strict Workflow:
   - Implement volatility features (rolling standard deviation of returns, normalized ATR).
   - Validate temporal alignment and NaN handling.
 - **Deliverables:** `src/crypto_analyzer/features/`.
-- **Validation Command:** `python -m pytest tests/test_features.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_features.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -101,12 +116,14 @@ Strict Workflow:
 
 - **Objective:** Transform feature dataframes into model-ready sequence tensors with strict chronological splitting and train-only scaling.
 - **Tasks:**
-  - Build sliding-window 3D tensor generator `(samples, window_length, features)`.
-  - Build classification target (`sign(return_t+1)`) and regression target (`return_t+1`).
+  - Build sliding-window 3D tensor generator with historical context $W = 60$ candles (5 hours) and feature dimension $K$: `(samples, W=60, K)`.
+  - Build primary forecast targets with forecast horizon $H = 12$ candles (1 hour ahead):
+    - Percentage return regression target: $R(t, 12) = \left( \frac{\text{Close}[t+12] - \text{Close}[t]}{\text{Close}[t]} \right) \times 100$
+    - Binary directional classification target: $D(t, 12) = 1 \text{ if } R(t, 12) > 0 \text{ else } 0$
   - Implement chronological split (70% train, 15% validation, 15% test).
-  - Fit scalers ONLY on training data; transform validation and test sets.
+  - Fit scalers ONLY on training data; transform validation and test sets without re-fitting.
 - **Deliverables:** `src/crypto_analyzer/preprocessing/`.
-- **Validation Command:** `python -m pytest tests/test_preprocessing.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_preprocessing.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -121,7 +138,7 @@ Strict Workflow:
   - XGBoost Classifier & Regressor.
   - Save performance benchmarks and prediction outputs.
 - **Deliverables:** `src/crypto_analyzer/models/baselines.py`, baseline experiment configs.
-- **Validation Command:** `python -m pytest tests/test_baselines.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_baselines.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -135,7 +152,7 @@ Strict Workflow:
   - Build PyTorch 1D-CNN model class.
   - Implement unified Trainer class with early stopping, learning rate scheduler, and checkpointing.
 - **Deliverables:** `src/crypto_analyzer/models/dl/`.
-- **Validation Command:** `python -m pytest tests/test_dl_models.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_dl_models.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -150,7 +167,7 @@ Strict Workflow:
   - Run Exp D (Full feature set).
   - Save all run artifacts to `experiments/results/`.
 - **Deliverables:** Feature ablation evaluation reports.
-- **Validation Command:** `python -m pytest tests/test_ablation.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_ablation.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -163,7 +180,7 @@ Strict Workflow:
   - Slice test period metrics by market regime.
   - Compute performance breakdowns per regime.
 - **Deliverables:** `src/crypto_analyzer/regimes/`.
-- **Validation Command:** `python -m pytest tests/test_regimes.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_regimes.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -174,9 +191,9 @@ Strict Workflow:
 - **Tasks:**
   - Generate metric comparison tables (Accuracy, F1, Directional Accuracy, MAE, RMSE).
   - Plot ROC curves, confusion matrices, and prediction vs actual return scatter plots.
-  - Perform paired statistical significance tests.
+  - Perform paired statistical significance tests following `DECISIONS.md` (Decision 011), utilizing Wilcoxon signed-rank tests where appropriate to the paired evaluation design rather than blindly applying to every metric.
 - **Deliverables:** `reports/figures/`, `reports/tables/`.
-- **Validation Command:** `python -m pytest tests/test_analysis.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_analysis.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -189,7 +206,7 @@ Strict Workflow:
   - Render model prediction outputs (direction, return, risk metrics).
   - Include mandatory scientific disclaimers and non-investment warnings.
 - **Deliverables:** `src/crypto_analyzer/app.py`, `scripts/run_app.py`.
-- **Validation Command:** `python -m pytest tests/test_app.py`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_app.py`
 - **Status:** NOT_STARTED
 
 ---
@@ -202,7 +219,7 @@ Strict Workflow:
   - Perform clean-environment installation and execution check.
   - Audit code against PEP 8 and docstring standards.
 - **Deliverables:** Audit report and final code fixes.
-- **Validation Command:** `python -m pytest tests/ --cov=src/crypto_analyzer`
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/ --cov=src/crypto_analyzer`
 - **Status:** NOT_STARTED
 
 ---
@@ -214,5 +231,5 @@ Strict Workflow:
   - Write research paper summary in `reports/research/`.
   - Document final conclusions, limitations, and future research directions.
 - **Deliverables:** `reports/research/final_paper.md`.
-- **Validation Command:** Documentation audit.
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/`
 - **Status:** NOT_STARTED
