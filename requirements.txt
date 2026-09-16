@@ -1,0 +1,17 @@
+# Core Data Science & ML Stack
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.2.0
+scipy>=1.10.0
+
+# Plotting & Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Data Acquisition & Utils
+requests>=2.28.0
+pyyaml>=6.0
+
+# Testing & Quality Assurance
+pytest>=7.3.0
+pytest-cov>=4.0.0
