@@ -24,7 +24,7 @@
 - [x] Record Decision 015 in `DECISIONS.md`
 - [x] Mark Phase 2 COMPLETE and STOP for Human Approval for Phase 3
 
-## CURRENT (Phase 3 — Feature Engineering — COMPLETE)
+## COMPLETED (Phase 3 — Feature Engineering)
 - [x] Implement return & log-return generators ($R_t, r_t$, lag returns)
 - [x] Implement technical indicators (SMA_12/24/96, EMA_12/26, RSI_14, MACD/Signal/Hist, Bollinger Upper/Lower/Width/%B, ATR_14)
 - [x] Implement volatility feature calculators (rolling std dev of 5m returns over 12/24/96 periods, normalized ATR ratio)
@@ -61,10 +61,6 @@
 - [x] Mark Phase 5 COMPLETE and STOP for Human Approval for Phase 6
 
 ## BACKLOG
-- [ ] Phase 6: Implement PyTorch LSTM, GRU, and 1D-CNN architectures & trainer
-
-- [ ] Phase 7: Execute feature ablation matrix (28 experiment runs)
-- [ ] Phase 8: Execute market regime breakdown evaluation
 - [ ] Phase 9: Generate scientific figures, metric tables, and paired significance tests
 - [ ] Phase 10: Build interactive Streamlit analyzer app
 - [ ] Phase 11: Execute complete repository audit & clean environment test
@@ -79,3 +75,7 @@
 - [x] Phase 2 BTC/USDT raw data pipeline & 14-point validation (2026-09-16)
 - [x] Phase 3 feature engineering — 24 features, 84 tests, zero look-ahead (2026-09-16)
 - [x] Phase 4 target & sequence pipeline — 3D tensors, 11 tests, 116 full suite (2026-09-16)
+- [x] Phase 5 baseline models (2026-09-17)
+- [x] Phase 6 deep learning models (2026-09-18)
+- [x] Phase 7 feature ablation study (2026-09-18)
+- [x] Phase 8 market regime analysis (2026-09-18)

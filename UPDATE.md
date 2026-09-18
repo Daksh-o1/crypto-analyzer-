@@ -441,3 +441,54 @@
 
 **Next Action:**
 - Phase 6 Complete. STOP. Wait for explicit human approval before Phase 7 (Feature Ablation Study).
+---
+
+## [2026-09-18] — Phase 7 Feature Ablation Study
+
+**Date:** 2026-09-18  
+**Phase:** Phase 7 (Feature Ablation Study)  
+**Work Completed:**
+1. Developed `scripts/run_ablation_analysis.py` to aggregate results from Phase 5 and Phase 6 JSON artifacts into a unified `ablation_summary.json`.
+2. Generated `ablation_regression_comparison.md` and `ablation_classification_comparison.md` in `reports/tables/` detailing absolute metric differences (\u0394) between baseline (EXP_A_PRICE) and augmented feature sets (EXP_B, EXP_C, EXP_D) for 8 models.
+3. Implemented Phase 7 unit tests in `tests/test_ablation.py` verifying metric integrity, missing models handling, schema validation, raw dataset immutability, and explicit distinction between `f1_binary` and `f1_macro`.
+4. Verified that no models were retrained during this phase and that all existing 60-window 3D sequences and original evaluations remained unchanged.
+5. All models (naive, ridge, logistic, random_forest, xgboost, LSTM, GRU, 1D-CNN) and experiments (A, B, C, D) correctly mapped and evaluated.
+
+**Next Action:**
+- Phase 7 Complete. STOP. Wait for explicit human approval before Phase 8 (Market Regime Analysis).
+
+---
+
+## [2026-09-18] - Phase 8 Market Regime Analysis Complete
+
+**Date:** 2026-09-18
+**Phase:** Phase 8 (Market Regime Analysis)
+**Work Completed:**
+1. Implemented modular market-regime classifier in `src/crypto_analyzer/regimes/classifier.py`:
+   - Rolling OLS-slope and return-volatility computed with W_regime = 288 candles (24 hours).
+   - Regime classification precedence: High Volatility first, then Bullish, Bearish, Sideways.
+   - Both theta_vol_high and theta_slope derived strictly from training partition (train-only, rows 0..5979).
+   - Decision 019 added to DECISIONS.md documenting data-adaptive theta_slope calibration.
+2. Implemented regime analysis pipeline in `src/crypto_analyzer/regimes/analysis.py`:
+   - Loads processed feature CSV, drops warm-up rows, aligns Close series, computes full-dataset regimes.
+   - Reports regime statistics exclusively on the test partition (out-of-sample).
+3. Wrote CLI script `scripts/run_regime_analysis.py`.
+4. Generated artifacts:
+   - experiments/results/regime_analysis_summary.json
+   - experiments/results/test_regime_labels.csv
+   - reports/tables/regime_analysis_report.md
+5. Test partition regime distribution (test N=1282):
+   - Sideways: 752 (58.7%)
+   - Bearish: 299 (23.3%)
+   - Bullish: 231 (18.0%)
+   - High Volatility: 0 (0.0%)
+   - NOTE: Zero High Volatility is a valid observed result indicating the test period was characterised by relatively low rolling volatility compared to the training period.
+6. 36 Phase-8-specific tests written and passing.
+7. Raw data SHA-256 verified unchanged.
+8. Phase 4-7 artifacts verified unchanged.
+9. Baseline predictions deterministically reconstructed (Phase 5 objects not persisted).
+10. DL predictions loaded from existing Phase 6 checkpoints (no retraining).
+11. Regime-wise model performance output generated successfully. High Volatility regime appropriately registers null/unavailable metrics due to 0 samples.
+
+**Next Action:**
+- Phase 8 COMPLETE (RESEARCH-READY). STOP. Wait for explicit human approval before Phase 9 (Experiment Analysis).

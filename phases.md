@@ -16,10 +16,10 @@ Strict Workflow:
 | Phase 2 | Data Pipeline | Build reproducible BTC/USDT data acquisition, validation, and storage | **COMPLETE** |
 | Phase 3 | Feature Engineering | Compute return, volume, indicator, and volatility features without leakage | **COMPLETE** |
 | Phase 4 | Target & Sequence Pipeline | Create 3D sequence tensors, targets, chronologically split, fit train scalers | **COMPLETE** |
-| Phase 5 | Baseline Models | Implement Naive, Linear, Random Forest, and XGBoost baselines | NOT_STARTED |
+| Phase 5 | Baseline Models | Implement Naive, Linear, Random Forest, and XGBoost baselines | **COMPLETE** |
 | Phase 6 | Deep Learning Models | Implement LSTM, GRU, and 1D-CNN modular architectures & training loops | **COMPLETE** |
-| Phase 7 | Feature Ablation Study | Execute comparative Experiments A, B, C, D across feature sets | NOT_STARTED |
-| Phase 8 | Market Regime Analysis | Formally segment performance across Bull, Bear, Sideways, & Volatile regimes | NOT_STARTED |
+| Phase 7 | Feature Ablation Study | Execute comparative Experiments A, B, C, D across feature sets | **COMPLETE** |
+| Phase 8 | Market Regime Analysis | Formally segment performance across Bull, Bear, Sideways, & Volatile regimes | **COMPLETE** |
 | Phase 9 | Experiment Analysis | Comprehensive statistical comparison, tables, and figures | NOT_STARTED |
 | Phase 10 | Crypto Analyzer Application | Build interactive Streamlit analyzer UI with strict disclaimer | NOT_STARTED |
 | Phase 11 | Final Validation | Full test suite, clean-environment re-run, leakage audit, code cleanup | NOT_STARTED |
@@ -145,7 +145,7 @@ Strict Workflow:
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_baselines.py`
 - **Status:** **COMPLETE**
   - All 5 baseline models evaluated across 4 experiment feature configs.
-  - Test results: 31 Phase-5-specific unit tests passed; 147 full suite tests passed.
+  - Test results: 31 Phase-5-specific unit tests passed; 147 full suite tests passed (historical Phase-5-time full-suite count).
   - Baseline result artifacts produced in `experiments/results/`.
 
 
@@ -162,6 +162,8 @@ Strict Workflow:
 - **Deliverables:** `src/crypto_analyzer/models/dl/`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_dl_models.py`
 - **Status:** **COMPLETE**
+  - All 24 model configurations trained successfully.
+  - Classification metrics corrected to distinguish `f1_binary` and `f1_macro`. No retraining required.
 
 ---
 
@@ -176,7 +178,7 @@ Strict Workflow:
   - Save all run artifacts to `experiments/results/`.
 - **Deliverables:** Feature ablation evaluation reports.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_ablation.py`
-- **Status:** NOT_STARTED
+- **Status:** **COMPLETE**
 
 ---
 
@@ -189,7 +191,12 @@ Strict Workflow:
   - Compute performance breakdowns per regime.
 - **Deliverables:** `src/crypto_analyzer/regimes/`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_regimes.py`
-- **Status:** NOT_STARTED
+- **Status:** **COMPLETE** (RESEARCH-READY)
+  - Decision 019 mathematical methodology implemented and verified.
+  - Test partition regime distribution (1,282 samples): Sideways 752 (58.7%), Bearish 299 (23.3%), Bullish 231 (18.0%), High Volatility 0 (0.0%).
+  - Baseline predictions deterministically reconstructed (since Phase 5 objects were not persisted). DL predictions loaded from Phase 6 checkpoints (no retraining).
+  - Regime-wise model performance output generated successfully. High Volatility regime appropriately registers null/unavailable metrics due to 0 samples.
+  - All tests passed (198/198).
 
 ---
 
