@@ -219,3 +219,225 @@
 
 
 
+
+---
+
+## [2026-09-16] — Phase 3 Feature Engineering
+
+**Date:** 2026-09-16  
+**Phase:** Phase 3 (Feature Engineering)  
+**Work Completed:**
+1. Created indicators.py containing zero look-ahead functions for returns, log returns, SMA, EMA, RSI, MACD, Bollinger Bands, ATR, rolling volatility, and ATR ratio.
+2. Enforced explicit min_periods=period and djust=False on all EMA-based calculations (EMA, MACD, RSI components, ATR).
+3. Created pipeline.py implementing uild_features to compute 24 features (for EXP_D_FULL) in a single pass.
+4. Defined column mappings for EXP_A_PRICE, EXP_B_PRICE_VOL, EXP_C_TECH_IND, and EXP_D_FULL.
+5. Created CLI script compute_features.py which loads tcusdt_5m_raw.csv, runs pipeline, outputs stats/counts, and saves tcusdt_5m_features.csv.
+6. Built comprehensive test suite (	est_features.py) with 84 tests covering mathematical correctness, zero look-ahead via future-row mutation, per-feature NaN propagation, and expected column counts.
+7. Verified pipeline against real dataset (8640 rows -> 8544 usable rows post-warm-up).
+8. Verified zero sequence tensors, target construction, or model operations occurred.
+9. Added Decision 016 mapping out explicit warm-up and NaN edge-case policies.
+
+**Files Created / Changed:**
+- D:\CryptoAnalyzer\src\crypto_analyzer\features\__init__.py
+- D:\CryptoAnalyzer\src\crypto_analyzer\features\indicators.py
+- D:\CryptoAnalyzer\src\crypto_analyzer\features\pipeline.py
+- D:\CryptoAnalyzer\scripts\compute_features.py
+- D:\CryptoAnalyzer\tests\test_features.py
+- D:\CryptoAnalyzer\data\processed\btcusdt_5m_features.csv
+- D:\CryptoAnalyzer\data\processed\feature_summary.json
+- D:\CryptoAnalyzer\DECISIONS.md
+- D:\CryptoAnalyzer\phases.md
+- D:\CryptoAnalyzer\UPDATE.md
+- D:\CryptoAnalyzer\SUMMARY.md
+- D:\CryptoAnalyzer\TASKS.md
+
+**Tests Performed:**
+- Executed D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/ -> 105 passed.
+
+**Results:**
+- All features correctly calculated with exact expected counts. Raw data immutability confirmed.
+
+- Phase 3 Complete. Proceeded to Phase 4 upon human approval.
+
+---
+
+## [2026-09-16] — Phase 4 Target & Sequence Pipeline
+
+**Date:** 2026-09-16
+**Phase:** Phase 4 (Target & Sequence Pipeline)
+**Work Completed:**
+1. Created `targets.py` implementing `compute_targets()` with the locked formulas:
+   - Regression: `R(t, 12) = ((Close[t+12] - Close[t]) / Close[t]) * 100`
+   - Classification: `D(t, 12) = 1 if R(t, 12) > 0 else 0`
+   - Final 12 rows with no valid `Close[t+12]` are explicitly removed via `dropna()`.
+2. Created `sequences.py` implementing:
+   - `fit_transform_scaler()`: fits `StandardScaler` on 2D training feature rows only; transforms val/test with train parameters.
+   - `extract_3d_sequences()`: builds chronological (60, K) windows; assigns sequences by target realization index (`t+12`) to prevent cross-split target leakage.
+3. Created `pipeline.py` implementing `build_experiment_tensors()` orchestrating warm-up removal, target generation, scaling, and 3D tensor building for all 4 experiment layouts.
+4. Created `scripts/build_sequences.py` CLI; validated on real 8544-row dataset.
+5. Created `tests/test_targets.py` (7 tests) and `tests/test_sequences.py` (4 tests).
+6. Recorded Decision 017 in `DECISIONS.md`.
+
+**Row Progression:**
+- 8640 raw rows → 8544 fully-populated (drop 96 warm-up NaNs) → 8532 target-valid (drop final 12) → 8473 total sequences
+
+**Split Boundaries (70/15/15 chronological):**
+- `train_end_idx = 5980`, `val_end_idx = 7262`
+
+**Tensor Shapes (verified on real dataset):**
+- `EXP_A_PRICE`:    Train (5909, 60, 4)  | Val (1282, 60, 4)  | Test (1282, 60, 4)
+- `EXP_B_PRICE_VOL`:Train (5909, 60, 5)  | Val (1282, 60, 5)  | Test (1282, 60, 5)
+- `EXP_C_TECH_IND`: Train (5909, 60, 19) | Val (1282, 60, 19) | Test (1282, 60, 19)
+- `EXP_D_FULL`:     Train (5909, 60, 24) | Val (1282, 60, 24) | Test (1282, 60, 24)
+
+**Files Created / Changed:**
+- `D:\CryptoAnalyzer\src\crypto_analyzer\preprocessing\__init__.py`
+- `D:\CryptoAnalyzer\src\crypto_analyzer\preprocessing\targets.py`
+- `D:\CryptoAnalyzer\src\crypto_analyzer\preprocessing\sequences.py`
+- `D:\CryptoAnalyzer\src\crypto_analyzer\preprocessing\pipeline.py`
+- `D:\CryptoAnalyzer\scripts\build_sequences.py`
+- `D:\CryptoAnalyzer\tests\test_targets.py`
+- `D:\CryptoAnalyzer\tests\test_sequences.py`
+- `D:\CryptoAnalyzer\data\processed\tensors\*.npz` (4 experiment tensor archives)
+- `D:\CryptoAnalyzer\data\processed\tensors\sequence_summary.json`
+- `D:\CryptoAnalyzer\DECISIONS.md` (Decision 016 fixed, Decision 017 added)
+- `D:\CryptoAnalyzer\phases.md`
+- `D:\CryptoAnalyzer\TASKS.md`
+- `D:\CryptoAnalyzer\UPDATE.md`
+- `D:\CryptoAnalyzer\SUMMARY.md`
+
+**Tests Performed:**
+- `pytest tests/test_targets.py tests/test_sequences.py -v` → 11 passed
+- `pytest tests/ -v` → 116 passed (full suite)
+
+**Phase 4 Acceptance Criteria — ALL PASS:**
+- [x] Targets exactly match `R(t,12)` and `D(t,12)`
+- [x] W=60 and H=12 correctly implemented
+- [x] All four experiment feature configurations supported (K=4,5,19,24)
+- [x] Sequence dimensions correct
+- [x] Sequence/target timestamps correctly aligned
+- [x] Future observations cannot enter X
+- [x] Final horizon rows explicitly excluded
+- [x] Chronological 70/15/15 split passes tests
+- [x] No train/val/test index overlap (cross-split leakage prevented via `t+12` boundary)
+- [x] Scaler is train-only fitted; targets excluded from scaling
+- [x] Raw data unchanged (no writes to `data/raw/`)
+- [x] Phase 4 tests pass
+- [x] Full suite passes
+- [x] Documentation updated
+- [x] No Phase 5+ implementation
+
+**Next Action:**
+- Phase 4 Complete.
+
+---
+
+## [2026-09-17] — Phase 5 Baseline Models
+
+**Date:** 2026-09-17  
+**Phase:** Phase 5 (Baseline Models)  
+**Work Completed:**
+1. Implemented baseline models in `src/crypto_analyzer/models/baselines.py`:
+   - `NaiveBaseline` (predicts last return $R(t-1, 1)$ for regression; directional sign for classification)
+   - `RidgeRegressorModel` (L2 regularized linear regression, alpha=1.0)
+   - `LogisticModel` (L2 regularized logistic regression, C=0.1, solver='lbfgs')
+   - `RandomForestModel` (Random Forest Regressor & Classifier, n_estimators=100, min_samples_leaf=5, n_jobs=-1)
+   - `XGBoostModel` (XGBoost Regressor & Classifier, n_estimators=200, max_depth=4, learning_rate=0.05, tree_method='hist')
+2. Implemented `ExperimentRunner` orchestration engine in `src/crypto_analyzer/models/experiment_runner.py`:
+   - Flattens $(N, 60, K)$ input 3D sequence tensors into 2D $(N, 60 \times K)$ representations for baseline ML models.
+   - Evaluates all 5 models across all 4 experiment feature configs (`EXP_A_PRICE`, `EXP_B_PRICE_VOL`, `EXP_C_TECH_IND`, `EXP_D_FULL`).
+   - Computes regression metrics: MAE, RMSE, MAPE.
+   - Computes classification metrics: Accuracy, Precision, Recall, F1-Score, Confusion Matrix.
+   - Saves individual experiment JSON artifacts and aggregated `all_baselines_results.json`.
+3. Created CLI evaluation script `scripts/run_baselines.py`.
+4. Implemented unit test suite in `tests/test_baselines.py` (31 unit tests covering model interface, tensor flattening, reproducibility, metric computation, output schema, missing input handling, zero-variance handling).
+5. Executed complete real-data benchmark evaluation across all 20 experiment-model combinations.
+
+**Files Created / Changed:**
+- `D:\CryptoAnalyzer\src\crypto_analyzer\models\baselines.py` [NEW]
+- `D:\CryptoAnalyzer\src\crypto_analyzer\models\experiment_runner.py` [NEW]
+- `D:\CryptoAnalyzer\src\crypto_analyzer\models\__init__.py` [NEW]
+- `D:\CryptoAnalyzer\scripts\run_baselines.py` [NEW]
+- `D:\CryptoAnalyzer\tests\test_baselines.py` [NEW]
+- `D:\CryptoAnalyzer\requirements.txt` (added `xgboost>=2.0.0`)
+- `D:\CryptoAnalyzer\experiments\results\EXP_A_PRICE_baselines.json` [NEW]
+- `D:\CryptoAnalyzer\experiments\results\EXP_B_PRICE_VOL_baselines.json` [NEW]
+- `D:\CryptoAnalyzer\experiments\results\EXP_C_TECH_IND_baselines.json` [NEW]
+- `D:\CryptoAnalyzer\experiments\results\EXP_D_FULL_baselines.json` [NEW]
+- `D:\CryptoAnalyzer\experiments\results\all_baselines_results.json` [NEW]
+- `D:\CryptoAnalyzer\DECISIONS.md` (Added Decision 018)
+- `D:\CryptoAnalyzer\phases.md` (Marked Phase 5 COMPLETE)
+- `D:\CryptoAnalyzer\TASKS.md` (Updated task items)
+- `D:\CryptoAnalyzer\SUMMARY.md` (Updated current phase status)
+- `D:\CryptoAnalyzer\UPDATE.md` (Logged Phase 5 entry)
+
+**Test Results:**
+- `pytest tests/test_baselines.py` → **31 passed** in 13.07s
+- `pytest tests/` → **147 passed** (full project suite, 100% pass)
+
+**Phase 5 Baseline Performance Summary (Test Partition - 1,282 samples):**
+
+| Experiment | Model | Reg MAE | Reg RMSE | Cls Acc | Cls F1 |
+|---|---|---|---|---|---|
+| **EXP_A_PRICE** (K=4) | Naive | **0.2053** | **0.3150** | 0.5250 | 0.5186 |
+| | Ridge | 0.2078 | 0.3155 | 0.5406 | 0.5342 |
+| | Logistic | 0.2078 | 0.3155 | 0.5406 | 0.5342 |
+| | RandomForest | 0.2104 | 0.3188 | 0.5398 | 0.5332 |
+| | XGBoost | 0.2141 | 0.3235 | **0.5640** | **0.5491** |
+| **EXP_B_PRICE_VOL** (K=5) | Naive | **0.2053** | **0.3150** | 0.5250 | 0.5186 |
+| | Ridge | 0.2079 | 0.3156 | 0.5242 | 0.5159 |
+| | Logistic | 0.2079 | 0.3156 | 0.5242 | 0.5159 |
+| | RandomForest | 0.2114 | 0.3195 | **0.5257** | **0.5158** |
+| | XGBoost | 0.2155 | 0.3253 | 0.5195 | 0.5057 |
+| **EXP_C_TECH_IND** (K=19) | Naive | **0.2053** | **0.3150** | 0.5250 | 0.5186 |
+| | Ridge | 0.2127 | 0.3204 | 0.5312 | 0.5304 |
+| | Logistic | 0.2127 | 0.3204 | **0.5312** | **0.5304** |
+| | RandomForest | 0.2126 | 0.3203 | 0.5273 | 0.5126 |
+| | XGBoost | 0.2227 | 0.3341 | 0.5062 | 0.5011 |
+| **EXP_D_FULL** (K=24) | Naive | **0.2053** | **0.3150** | 0.5250 | 0.5186 |
+| | Ridge | 0.2133 | 0.3211 | 0.5359 | 0.5334 |
+| | Logistic | 0.2133 | 0.3211 | **0.5359** | **0.5334** |
+| | RandomForest | 0.2129 | 0.3203 | 0.5101 | 0.4907 |
+| | XGBoost | 0.2241 | 0.3343 | 0.5031 | 0.4938 |
+
+**Phase 5 Acceptance Criteria — ALL PASS:**
+- [x] All 5 baseline models implemented (Naive, Ridge, Logistic, RandomForest, XGBoost)
+- [x] All 4 experiment feature configurations benchmarked (EXP_A, EXP_B, EXP_C, EXP_D)
+- [x] Inputs properly flattened from $(N, 60, K)$ to $(N, 60 \times K)$
+- [x] Regression target $R(t, 12)$ evaluated with MAE, RMSE, MAPE
+- [x] Classification target $D(t, 12)$ evaluated with Accuracy, Precision, Recall, F1, Confusion Matrix
+- [x] Strict chronological train/validation/test split respected; zero leakage
+- [x] Models fit on training partition only
+- [x] Structured JSON metric outputs produced and verified in `experiments/results/`
+- [x] 31/31 baseline unit tests pass; 147/147 full project unit tests pass
+- [x] Raw data SHA-256 hash verified unchanged
+- [x] Documentation updated (`UPDATE.md`, `DECISIONS.md`, `phases.md`, `TASKS.md`, `SUMMARY.md`)
+- [x] Phase 6 deep learning implementation was NOT started
+
+**Next Action:**
+- Phase 5 Complete. STOP. Wait for explicit human approval before Phase 6.
+
+---
+
+## [2026-09-18] — Phase 6 Deep Learning Models Execution Complete
+
+**Date:** 2026-09-18  
+**Phase:** Phase 6 (Deep Learning Models)  
+**Work Completed:**
+1. Implemented modular deep learning architectures (`LSTMModel`, `GRUModel`, `CNN1DModel`) and a unified `DLTrainer` with Early Stopping, Checkpointing, and adaptive LR scheduling.
+2. Verified multi-threading constraints on Windows CPU causing deadlocks, setting `torch.set_num_threads(1)` for stable single-thread deterministic execution.
+3. Added robust epoch-level logging to `DLTrainer` to accurately monitor lengthy training durations (up to 2.2 hours per model without silent stalls).
+4. Conducted full robust matrix execution comprising 24 combinations (3 architectures × 4 experiments × 2 tasks).
+5. All 24 configurations successfully completed full training. Best epochs were automatically determined via Early Stopping (`patience=7`, `max_epochs=50`).
+6. Verified no smoke-test results were accidentally marked as final results (smoke checkpoints explicitly deleted and rerun in full).
+7. Maintained `Phase 5` baseline integrity, Phase 4 tensors, and raw data SHA256 integrity check.
+8. Persisted state to `experiments/results/dl_matrix_status.json` ensuring reproducibility.
+
+**Verification Checklist:**
+- [x] All 24 models successfully trained on the Phase 4 60-step sequence tensors.
+- [x] Evaluation rigorously utilized `torch.no_grad()` restricting test-set evaluation strictly to final inference.
+- [x] Result artifacts securely saved to `experiments/results/`. Checkpoints saved to `models/checkpoints/`.
+- [x] Phase 7 was NOT started.
+
+**Next Action:**
+- Phase 6 Complete. STOP. Wait for explicit human approval before Phase 7 (Feature Ablation Study).

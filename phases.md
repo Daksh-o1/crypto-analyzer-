@@ -14,10 +14,10 @@ Strict Workflow:
 | Phase 0 | Project Foundation | Establish environment, structure, git, docs, and test harness on D: | **COMPLETE** |
 | Phase 1 | Research Foundation | Finalize formal scientific definitions, hypotheses, and experimental design | **COMPLETE** |
 | Phase 2 | Data Pipeline | Build reproducible BTC/USDT data acquisition, validation, and storage | **COMPLETE** |
-| Phase 3 | Feature Engineering | Compute return, volume, indicator, and volatility features without leakage | NOT_STARTED |
-| Phase 4 | Target & Sequence Pipeline | Create 3D sequence tensors, targets, chronologically split, fit train scalers | NOT_STARTED |
+| Phase 3 | Feature Engineering | Compute return, volume, indicator, and volatility features without leakage | **COMPLETE** |
+| Phase 4 | Target & Sequence Pipeline | Create 3D sequence tensors, targets, chronologically split, fit train scalers | **COMPLETE** |
 | Phase 5 | Baseline Models | Implement Naive, Linear, Random Forest, and XGBoost baselines | NOT_STARTED |
-| Phase 6 | Deep Learning Models | Implement LSTM, GRU, and 1D-CNN modular architectures & training loops | NOT_STARTED |
+| Phase 6 | Deep Learning Models | Implement LSTM, GRU, and 1D-CNN modular architectures & training loops | **COMPLETE** |
 | Phase 7 | Feature Ablation Study | Execute comparative Experiments A, B, C, D across feature sets | NOT_STARTED |
 | Phase 8 | Market Regime Analysis | Formally segment performance across Bull, Bear, Sideways, & Volatile regimes | NOT_STARTED |
 | Phase 9 | Experiment Analysis | Comprehensive statistical comparison, tables, and figures | NOT_STARTED |
@@ -108,7 +108,7 @@ Strict Workflow:
   - Validate temporal alignment and NaN handling.
 - **Deliverables:** `src/crypto_analyzer/features/`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_features.py`
-- **Status:** NOT_STARTED
+- **Status:** **COMPLETE**
 
 ---
 
@@ -122,9 +122,13 @@ Strict Workflow:
     - Binary directional classification target: $D(t, 12) = 1 \text{ if } R(t, 12) > 0 \text{ else } 0$
   - Implement chronological split (70% train, 15% validation, 15% test).
   - Fit scalers ONLY on training data; transform validation and test sets without re-fitting.
-- **Deliverables:** `src/crypto_analyzer/preprocessing/`.
-- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_preprocessing.py`
-- **Status:** NOT_STARTED
+  - Prevent cross-split target leakage by assigning sequences based on where `Close[t+12]` falls, not just `t`.
+- **Deliverables:** `src/crypto_analyzer/preprocessing/`, `scripts/build_sequences.py`, `data/processed/tensors/`.
+- **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_targets.py tests/test_sequences.py -v`
+- **Status:** **COMPLETE**
+  - Row progression: 8640 raw → 8544 warm-up-clean → 8532 target-valid → 8473 sequences.
+  - Tensors: EXP_A (5909,60,4) | EXP_B (5909,60,5) | EXP_C (5909,60,19) | EXP_D (5909,60,24) [train]
+  - Test results: 11 Phase-4-specific tests + 116 full suite (100% pass).
 
 ---
 
@@ -137,9 +141,13 @@ Strict Workflow:
   - Random Forest Classifier & Regressor.
   - XGBoost Classifier & Regressor.
   - Save performance benchmarks and prediction outputs.
-- **Deliverables:** `src/crypto_analyzer/models/baselines.py`, baseline experiment configs.
+- **Deliverables:** `src/crypto_analyzer/models/baselines.py`, `src/crypto_analyzer/models/experiment_runner.py`, `scripts/run_baselines.py`, `experiments/results/*.json`, `tests/test_baselines.py`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_baselines.py`
-- **Status:** NOT_STARTED
+- **Status:** **COMPLETE**
+  - All 5 baseline models evaluated across 4 experiment feature configs.
+  - Test results: 31 Phase-5-specific unit tests passed; 147 full suite tests passed.
+  - Baseline result artifacts produced in `experiments/results/`.
+
 
 ---
 
@@ -153,7 +161,7 @@ Strict Workflow:
   - Implement unified Trainer class with early stopping, learning rate scheduler, and checkpointing.
 - **Deliverables:** `src/crypto_analyzer/models/dl/`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_dl_models.py`
-- **Status:** NOT_STARTED
+- **Status:** **COMPLETE**
 
 ---
 

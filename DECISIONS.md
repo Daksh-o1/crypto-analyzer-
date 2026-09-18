@@ -146,3 +146,61 @@ This log records major architectural, methodological, and experimental decisions
 - **Reason:** Provides the immutable, reproducible empirical dataset required for subsequent feature calculation and model sequence generation while fulfilling all 14 data quality and provenance criteria specified in `phases.md`.
 
 
+
+
+---
+
+## Decision 016: Phase 3 Feature Engineering Implementation & Warm-up Policy
+- **Date:** 2026-09-16
+- **Status:** APPROVED
+- **Decision:** Implemented zero future look-ahead feature pipeline generating all 24 features for `EXP_D_FULL`. Defined explicit initialization policies:
+  1. **EMA & ATR Warm-up:** All Exponential Moving Averages (`ema_12`, `ema_26`, MACD signal, `atr`, `rsi` components) explicitly use `adjust=False` and `min_periods=period` to ensure honest NaN propagation during warm-up and recursive seeding thereafter.
+  2. **RSI Edge Cases:** RSI replaces theoretical 0/0 NaN (zero movement) with 50.0 (neutral), properly approaching 100 on absolute gains and 0 on absolute losses.
+  3. **ATR Definition:** Uses `skipna=False` on True Range component max aggregation to correctly yield NaN when the shifted previous close is NaN.
+  4. **Max Warm-up:** The total pipeline maximum warm-up is 96 rows, bounded by `rolling_vol_96` (which requires 1 prior row for returns + 96 rows for standard deviation).
+- **Reason:** Ensures mathematically strict implementation of indicators without the data leakage or initialization bias common in unverified financial ML pipelines.
+
+
+---
+
+## Decision 017: Phase 4 Target Generation, Sequence Construction, & Scaling Policy
+- **Date:** 2026-09-16
+- **Status:** APPROVED
+- **Decision:** Implemented the 1-hour-ahead target definitions and 3D sliding window sequence generator with the following methodology:
+  1. **Target Formulas (Locked):**
+     - Regression: `R(t, 12) = ((Close[t+12] - Close[t]) / Close[t]) * 100`
+     - Classification: `D(t, 12) = 1 if R(t, 12) > 0 else 0`
+     - Zero return maps to `D=0` (no positive movement).
+  2. **Final H Rows:** The final 12 rows of any feature dataset cannot produce a valid target (no `Close[t+12]` exists). These rows are explicitly removed via `dropna()` on the NaN-shifted future close series — not by silent slicing. Resulting target-valid rows: 8544 - 12 = 8532.
+  3. **Sequence Window:** W = 60. Each sequence X[i] covers indices [t-59 ... t] with shape (60, K). First valid sequence starts at index 59, last valid at index 8531, yielding 8473 sequences total before splitting.
+  4. **Cross-Split Target Leakage Prevention:** Sequence assignment to a partition is determined by where the *future target observation* (index t+12) falls — not merely where the window end falls. Sequences whose `t+12` index falls in the validation region are assigned to validation; those in the test region go to test. This prevents a training-labeled window from consuming a future observation that belongs to the validation or test temporal partition.
+  5. **Chronological Split (70/15/15):** Boundaries are computed in integer row indices on the 8544 fully populated feature rows:
+     - `train_end_idx = int(8544 * 0.70) = 5980`
+     - `val_end_idx = int(8544 * 0.85) = 7262`
+     - No random shuffling. No k-fold cross-validation.
+  6. **Scaler Policy:** `StandardScaler` is fit exclusively on the **2D feature rows** of the training partition (`features[0:train_end_idx]`). Validation and test feature rows are transformed using training statistics only. Targets are never included in scaler input. This avoids repeated weighting of overlapping 3D window timestamps that would occur with flattened sequence-based fitting.
+  7. **Resulting Tensor Shapes (real dataset):**
+     - `EXP_A_PRICE`: Train (5909, 60, 4) | Val (1282, 60, 4) | Test (1282, 60, 4)
+     - `EXP_B_PRICE_VOL`: Train (5909, 60, 5) | Val (1282, 60, 5) | Test (1282, 60, 5)
+     - `EXP_C_TECH_IND`: Train (5909, 60, 19) | Val (1282, 60, 19) | Test (1282, 60, 19)
+     - `EXP_D_FULL`: Train (5909, 60, 24) | Val (1282, 60, 24) | Test (1282, 60, 24)
+- **Reason:** Ensures a fully leakage-free, reproducible, chronologically valid sequence dataset ready for model training in subsequent phases.
+
+---
+
+### [2026-09-17] Decision 018: Phase 5 Baseline Model & Evaluation Design
+
+- **Context:** Implementing non-deep-learning baselines (Naive, Ridge, Logistic, RandomForest, XGBoost) to establish benchmarks before Phase 6 DL models.
+- **Decisions Made:**
+  1. **3D Tensor Flattening Policy:** Baseline non-DL models require 2D matrix inputs `(N, features)`. Sliding window tensors `(N, 60, K)` are flattened row-wise into `(N, 60 * K)` feature vectors. This preserves all temporal sequence information within each window without discarding lookback steps.
+  2. **Hyperparameter Locking Policy:** Fixed, deterministic hyperparameters with `random_state=42` across all models to establish a deterministic/reproducible configuration where practical:
+     - Naive: Predicts zero-lag momentum return $R(t-1, 1)$ / direction sign
+     - Ridge: `alpha=1.0`, `fit_intercept=True`
+     - Logistic: `C=0.1`, `max_iter=1000`, `solver='lbfgs'`
+     - RandomForest: `n_estimators=100`, `max_depth=None`, `min_samples_leaf=5`, `n_jobs=-1` (production execution)
+     - XGBoost: `n_estimators=200`, `max_depth=4`, `learning_rate=0.05`, `subsample=0.8`, `colsample_bytree=0.8`, `tree_method='hist'`
+  3. **MAPE Handling Strategy:** Relative percentage errors (MAPE) on target returns $R(t, 12)$ can spike artificially when actual returns approach 0%. MAPE computation handles division by zero safely using `np.where(abs(y_true) > 1e-8, abs((y_true - y_pred) / y_true), 0.0)` and reporting finite float values.
+  4. **RandomForest Reproducibility in Unit Tests:** Parallel execution (`n_jobs=-1`) in scikit-learn RandomForest can cause non-deterministic floating-point reduction order variations (~$10^{-16}$). In production evaluation runner `n_jobs=-1` is used for multi-core speed, while unit tests evaluate reproducibility using `n_jobs=1` and `np.testing.assert_array_almost_equal(decimal=10)`.
+  5. **Train-Only Model Fitting:** Baseline models are strictly fit on the `train` dataset partition (`X_train`, `y_train`). Validation (`X_val`) and test (`X_test`) partitions are evaluated strictly out-of-sample with zero parameter updating.
+- **Reason:** Ensures transparent, reproducible, and leakage-free baseline benchmarks across all 4 experiment configurations (`EXP_A` through `EXP_D`).
+
