@@ -209,8 +209,12 @@ Strict Workflow:
   - Perform paired statistical significance tests following `DECISIONS.md` (Decision 011), utilizing Wilcoxon signed-rank tests where appropriate to the paired evaluation design rather than blindly applying to every metric.
 - **Deliverables:** `reports/figures/`, `reports/tables/`.
 - **Validation Command:** `D:\CryptoAnalyzer\.venv\Scripts\python.exe -m pytest tests/test_analysis.py`
-- **Status:** NOT_STARTED
-
+- **Status:** **COMPLETE** (RESEARCH-READY)
+  - Generated paired predictions for 24 targeted comparisons across feature and model impacts (H2, H4).
+  - Baselines deterministically reconstructed; DL models evaluated directly from Phase 6 checkpoints. No leakage, no retraining.
+  - Performed two-sided paired Wilcoxon signed-rank tests with Holm step-down multiple comparison correction.
+  - Test sample size validated at 1282; nonzero differences tracked appropriately.
+  - Outputs saved to JSON and markdown tables for thesis inclusion.
 ---
 
 ## Phase 10: Crypto Analyzer Application

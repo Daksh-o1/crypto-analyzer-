@@ -61,7 +61,6 @@
 - [x] Mark Phase 5 COMPLETE and STOP for Human Approval for Phase 6
 
 ## BACKLOG
-- [ ] Phase 9: Generate scientific figures, metric tables, and paired significance tests
 - [ ] Phase 10: Build interactive Streamlit analyzer app
 - [ ] Phase 11: Execute complete repository audit & clean environment test
 - [ ] Phase 12: Write research paper deliverables
@@ -79,3 +78,4 @@
 - [x] Phase 6 deep learning models (2026-09-18)
 - [x] Phase 7 feature ablation study (2026-09-18)
 - [x] Phase 8 market regime analysis (2026-09-18)
+- [x] Phase 9 statistical analysis & comparative reports (2026-09-19)

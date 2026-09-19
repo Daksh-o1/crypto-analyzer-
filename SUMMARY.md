@@ -1,7 +1,7 @@
 # CryptoAnalyzer Project Summary (SUMMARY.md)
 
-- **Current Phase:** Phase 8 (Market Regime Analysis) — **COMPLETE**
-- **Overall Progress:** 9 / 13 Phases Complete (Phases 0–8 COMPLETE; awaiting human approval for Phase 9)
+- **Current Phase:** Phase 9 (Statistical Significance) — **COMPLETE**
+- **Overall Progress:** 10 / 13 Phases Complete (Phases 0–9 COMPLETE; awaiting human approval for Phase 10)
 - **Project Root:** `D:\CryptoAnalyzer`
 - **Environment:** Python 3.11.15 (`D:\CryptoAnalyzer\.venv`)
 - **Git Branch:** `main` (Initialized)
@@ -36,10 +36,10 @@
 - **Deep Learning (Phase 6):** LSTM, GRU, and 1D-CNN modular architectures implemented with PyTorch `DLTrainer`. Training matrix across 4 experiments and 2 tasks successfully completed (24 total configurations). Checkpoints and results artifacts preserved.
 
 ### Blockers
-- None. Phase 8 is verified and complete. Ready for Phase 9 (Experiment Analysis) upon approval.
+- None. Phase 9 is verified and complete. Ready for Phase 10 (Crypto Analyzer Application) upon approval.
 
 ---
 
 ## Immediate Next Step
-- Await human approval to proceed to **Phase 9 (Experiment Analysis)**.
+- Await human approval to proceed to **Phase 10 (Crypto Analyzer Application)**.
 

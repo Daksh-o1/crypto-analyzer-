@@ -490,5 +490,22 @@
 10. DL predictions loaded from existing Phase 6 checkpoints (no retraining).
 11. Regime-wise model performance output generated successfully. High Volatility regime appropriately registers null/unavailable metrics due to 0 samples.
 
-**Next Action:**
 - Phase 8 COMPLETE (RESEARCH-READY). STOP. Wait for explicit human approval before Phase 9 (Experiment Analysis).
+
+---
+
+## [2026-09-19] — Phase 9 Statistical Significance
+
+**Date:** 2026-09-19  
+**Phase:** Phase 9 (Statistical Significance)  
+**Work Completed:**
+1. Implemented `scripts/run_statistical_analysis.py` for targeted Wilcoxon signed-rank paired tests across feature variations (EXP_A vs B, C, D) and model variations (Naive vs Ridge vs RF vs XGBoost vs LSTM vs GRU vs 1D-CNN) using Decision 011 methodology.
+2. Applied Holm step-down correction for multiple comparisons.
+3. Computed absolute error differences for regression and hit-series discrete differences for classification.
+4. Output results to `experiments/results/statistical_significance.json` and Markdown tables.
+5. Developed and passed `tests/test_statistical_analysis.py` to ensure schema constraints and exact test N=1282 matching.
+6. Baseline predictions reconstructed deterministically to save memory and PyTorch DL checkpoints loaded without retraining. All Phase 0-8 artifacts completely unmodified.
+7. Full suite of 199/199 tests passed.
+
+**Next Action:**
+- Phase 9 COMPLETE. STOP. Wait for explicit human approval before Phase 10 (Crypto Analyzer Application).
